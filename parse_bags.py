@@ -21,10 +21,11 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 
 
+
 class Parser:
     LINK = 'http://aliexpress.ru/category/202000224/luggage-bags.html'
 
-    folder_dir = r"C:\Users\Dmitrii\Desktop\aliexpress"
+    folder_dir = input('Укажите путь до папки, куда будут сохраняться картинки:\n')
 
     params = {
         "minPrice": 500,
@@ -82,8 +83,8 @@ class Parser:
 
         :param urls_item_id: список url'ов на товары -> list
         :return: словарь, где
-            key: произвольный номер товара в диапазоне 0-19;
-            value: список url'ов на все цвета товара. -> dict
+            key: url на товар;
+            value: список url'ов на все цвета этого товара. -> dict
         """
         dict_sku_id = {}
         for url in urls_item_id:
@@ -97,15 +98,17 @@ class Parser:
         urls_dict = self._prepare_sku_id(dict_sku_id)
         return urls_dict
 
-    def get_pictures_urls(self, urls_dict):
-        picture_urls_lst = []
-        for item in urls_dict.values():
-            for url in tqdm(item):
-                soup = self._init_driver(url)
-                data = soup.find("picture")
-                picture_url = str(data).split(' ')[2].split('=')[1].strip('"')
-                picture_urls_lst.append(picture_url)
-        return picture_urls_lst
+    # def get_pictures_urls(self, urls_dict):
+    #     picture_urls_lst = []
+    #     for key, value in urls_dict.items():
+    #         # key - главная ссылка на товар
+    #         # value - список всех ссылок на цвета товара
+    #         for url in tqdm(value):
+    #             soup = self._init_driver(url)
+    #             data = soup.find("picture")
+    #             picture_url = str(data).split(' ')[2].split('=')[1].strip('"')
+    #             picture_urls_lst.append(picture_url)
+    #     return picture_urls_lst
 
     def next_page(self):
         self.params['page'] += 1
@@ -122,24 +125,24 @@ class Parser:
     def _prepare_sku_id(dict_sku_ids):
         """
         Преобразовываем словарь вида:
-            key: url на товар
+            key: url на товар с параметром sku_id
             value: sku_id
         в словарь:
-            key: произвольный номер от 0-19
+            key: url на товар
             value: список готовых url'ов на цвета товара (url на товар + sku_id)
 
         :param dict_sku_ids: -> dict
         :return: -> dict
         """
         urls_dict = {}
-        for idx, tpl in enumerate(dict_sku_ids.items()):
-            main_url = tpl[0].split("=")[0]
-            urls_dict[idx] = []
-            urls_dict[idx].append(tpl[0])
-            for item in tpl[1]:
+        for key, value in dict_sku_ids.items():
+            main_url = key.split("=")[0]
+            urls_dict[main_url] = []
+            urls_dict[main_url].append(key)
+            for item in value:
                 url = f"{main_url}={item}"
-                if url not in urls_dict[idx]:
-                    urls_dict[idx].append(url)
+                if url not in urls_dict[main_url]:
+                    urls_dict[main_url].append(url)
         return urls_dict
 
     @staticmethod
@@ -152,6 +155,7 @@ class Parser:
         :return: объект класса BeautifulSoup, в котором находится html код страницы -> bs4.BeautifulSoup
         """
         driver = webdriver.Firefox()
+        driver.set_window_size(300, 300)
         driver.get(url)
         response = driver.page_source
         driver.close()
