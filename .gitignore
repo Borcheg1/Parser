@@ -1,0 +1,9 @@
+# Virtual env
+venv/
+
+# PyCharm files
+.idea
+__pycache__/
+
+# selenium.webdriver logs
+geckodriver.log
