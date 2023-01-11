@@ -174,6 +174,12 @@ dct = {'http://aliexpress.ru/item/1005003279108272.html?sku_id=12000024995908119
 
 url = 'https://ae04.alicdn.com/kf/S3c54e50c034a47dbb1be7fc973f57aaeo.jpg_640x640.jpg'
 
+# driver = webdriver.Firefox()
+# driver.get(url)
+# response = driver.page_source
+# driver.close()
+# soup = BeautifulSoup(response, 'html.parser')
+print(type(url))
 
 # for item in urls_dict.values():
 #     for url in tqdm(item):

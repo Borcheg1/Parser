@@ -4,13 +4,22 @@ choose_category - циклическая, может быть перевызва
 
 '''
 
+from os import mkdir
+from io import BytesIO
+import requests
+from PIL import Image
+from tqdm import tqdm
+
 from parse_bags import Parser
-from pprint import pprint
+
+
+def main():
+    parser = Parser()
+
+
+
+
 
 
 if __name__ == '__main__':
-    p = Parser()
-    url1 = p.choose_category()
-    url2 = p.choose_category(url1)
-    lst = p.get_item_id_from_page(url2)
-    pprint(p.get_sku_id(lst))
+    main()
