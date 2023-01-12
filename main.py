@@ -11,8 +11,8 @@ from parse_bags import Parser
 def main():
     parser = Parser()
     link = parser.LINK
-    parent_folder = r""  # Путь до папки, куда будут сохраняться фото
-    max_price = 8000  # Максимальный порог диапазона цен
+    parent_folder = r"C:\Users\Dmitrii\Desktop\aliexpress"  # Путь до папки, куда будут сохраняться фото
+    max_price = 8500  # Максимальный порог диапазона цен
     max_page = 10  # Количество страниц распарсенных до изменения диапазона цен
     price_step = 400  # Изменение диапазона цен на этот шаг
     picture_size = (480, 480)

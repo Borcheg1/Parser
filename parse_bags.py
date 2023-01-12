@@ -1,24 +1,7 @@
-"""
-Каждые ~500 картинок менять диапазон цен
-цвет, тип, материал
-minPrice=4000&
-maxPrice=8000
-page=1
-start price 500, 20 iterations, finish 8500, !+= 400!
-
-Одна странца - 20 объектов
-500
-
-Проверка на окончание страниц
-if 'Ничего не нашли' in str(soup.find('h1').text):
-    print('END')
-"""
-
-
 import re
 from tqdm import tqdm
 from bs4 import BeautifulSoup
-from selenium import webdriver
+from selenium.webdriver import Firefox, FirefoxOptions
 
 
 class Parser:
@@ -139,8 +122,10 @@ class Parser:
         :param url: url на страницу, из которой хотим достать данные -> str
         :return: объект класса BeautifulSoup, в котором находится html код страницы -> bs4.BeautifulSoup
         """
-        driver = webdriver.Firefox()
-        driver.set_window_size(300, 300)
+        options = FirefoxOptions()
+        options.add_argument("--width=300")
+        options.add_argument("--height==300")
+        driver = Firefox(options=options)
         driver.get(url)
         response = driver.page_source
         driver.close()
