@@ -41,6 +41,7 @@ class Parser:
         попутно избавляясь от дубликатов.
 
         :param url: url на категорию товаров -> str
+        :return: "END" если на странице нет товаров -> str
         :return: список url'ов на товары -> list
         """
         prm = self.params

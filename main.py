@@ -59,8 +59,8 @@ def main():
             for value in urls_dict.values():
                 cnt += len(value)
 
-            print(f'Товары всех цветов в количестве {cnt} найдены.\n'
-                  f'Начинаю поиск изображений\n')
+            print(f'\nТовары всех цветов в количестве {cnt} найдены.\n'
+                  f'Начинаю поиск изображений')
 
             for idx, tpl in enumerate(urls_dict.items()):
                 key, value = tpl
@@ -69,12 +69,12 @@ def main():
                 if not(os.path.exists(path) and os.path.isdir(path)):
                     os.makedirs(path)
                 json_data = {
-                    idx: key.split('?')[0]
+                    idx + folder_counter: key.split('?')[0]
                 }
                 with open(f'{parent_folder}/urls.json', 'a') as file:
                     json.dump(json_data, file)
 
-                print(f'Начинаю загрузку изображений товара №{idx + 1}\n')
+                print(f'\nНачинаю загрузку изображений товара №{idx + 1}')
                 for number, url in enumerate(tqdm(value)):
                     soup = parser.init_driver(url)
                     data = soup.find("picture")
@@ -85,7 +85,7 @@ def main():
                             image = Image.open(BytesIO(response.content))
                             size = picture_size
                             resize_image = image.resize(size)
-                            resize_image.save(f'{path}/{number}.jpg', "JPEG")
+                            resize_image.save(f'{path}/{number}.jpg')
 
             folder_counter += idx
 
