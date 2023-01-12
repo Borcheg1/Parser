@@ -1,8 +1,4 @@
-'''
-choose_category - циклическая, может быть перевызвана сколько угодно раз,
-обработать останов.
-
-'''
+import json
 import os.path
 from io import BytesIO
 import requests
@@ -15,7 +11,12 @@ from parse_bags import Parser
 def main():
     parser = Parser()
     link = parser.LINK
-    parent_folder = parser.folder_dir
+    parent_folder = r""  # Путь до папки, куда будут сохраняться фото
+    max_price = 8000  # Максимальный порог диапазона цен
+    max_page = 10  # Количество страниц распарсенных до изменения диапазона цен
+    price_step = 400  # Изменение диапазона цен на этот шаг
+    picture_size = (480, 480)
+    folder_counter = 0
 
     try:
         category_url = parser.choose_category(link)
@@ -27,62 +28,74 @@ def main():
             category_url = parser.choose_category(link)
         except Exception as e:
             print(e)
-        subcategory = int(input('Продолжить выбор категории? 0 - нет, 1 - да\n'))
+        subcategory = int(input('Продолжить выбор категории? 0 - нет, 1 - да:\n'))
 
-    print(
-        f'Ищу товары на странице №{parser.params["page"]}\n'
-        f'Параметры:\nМинимальная цена = {parser.params["minPrice"]}\n'
-        f'Максимальная цена = {parser.params["maxPrice"]}\n'
-    )
+    while parser.params['maxPrice'] <= max_price:
+        while parser.params['page'] <= max_page:
+            print(
+                f'Ищу товары на странице №{parser.params["page"]}\n'
+                f'Параметры:\nМинимальная цена = {parser.params["minPrice"]}\n'
+                f'Максимальная цена = {parser.params["maxPrice"]}\n'
+                f'...\n'
+            )
 
-    try:
-        urls_item_id = parser.get_item_id_from_page(category_url)
-    except Exception as e:
-        print(e)
+            try:
+                urls_item_id = parser.get_item_id_from_page(category_url)
+            except Exception as e:
+                print(e)
 
-    print(f'Товаров найдено: {len(urls_item_id)}\n'
-          f'Ищу есть ли эти товары другого цвета\n')
+            if urls_item_id == "END":
+                break
 
-    try:
-        urls_dict = parser.get_sku_id(urls_item_id)
-    except Exception as e:
-        print(e)
+            print(f'Товаров найдено: {len(urls_item_id)}\n'
+                  f'Ищу есть ли эти товары в другом цвете\n')
 
-    counter = 0
-    for value in urls_dict.values():
-        counter += len(value)
+            try:
+                urls_dict = parser.get_sku_id(urls_item_id)
+            except Exception as e:
+                print(e)
 
-    print(f'Товары всех цветов в количестве {counter} найдены.\n'
-          f'Начинаю поиск изображений\n')
+            cnt = 0
+            for value in urls_dict.values():
+                cnt += len(value)
 
-    for idx, tpl in enumerate(urls_dict.items()):
-        folder = str(idx)
-        path = os.path.join(parent_folder, folder)
-        os.mkdir(path)
-        json_data = {
-            idx: tpl[0]
-        }
-        with open(f'{parent_folder}/urls.json', 'a') as file:
-            file.d
+            print(f'Товары всех цветов в количестве {cnt} найдены.\n'
+                  f'Начинаю поиск изображений\n')
 
+            for idx, tpl in enumerate(urls_dict.items()):
+                key, value = tpl
+                folder = str(idx + folder_counter)
+                path = os.path.join(parent_folder, folder)
+                if not(os.path.exists(path) and os.path.isdir(path)):
+                    os.makedirs(path)
+                json_data = {
+                    idx: key.split('?')[0]
+                }
+                with open(f'{parent_folder}/urls.json', 'a') as file:
+                    json.dump(json_data, file)
 
+                print(f'Начинаю загрузку изображений товара №{idx + 1}\n')
+                for number, url in enumerate(tqdm(value)):
+                    soup = parser.init_driver(url)
+                    data = soup.find("picture")
+                    if data:
+                        picture_url = f'''http://{str(data).split(' ')[2].split('=')[1].strip('"').split('//')[1]}'''
+                        response = requests.get(picture_url)
+                        if 199 < response.status_code < 203:
+                            image = Image.open(BytesIO(response.content))
+                            size = picture_size
+                            resize_image = image.resize(size)
+                            resize_image.save(f'{path}/{number}.jpg', "JPEG")
 
+            folder_counter += idx
 
-    # def get_pictures_urls(self, urls_dict):
-    #     picture_urls_lst = []
-    #     for key, value in urls_dict.items():
-    #         # key - главная ссылка на товар
-    #         # value - список всех ссылок на цвета товара
-    #         for url in tqdm(value):
-    #             soup = self._init_driver(url)
-    #             data = soup.find("picture")
-    #             picture_url = str(data).split(' ')[2].split('=')[1].strip('"')
-    #             picture_urls_lst.append(picture_url)
-    #     return picture_urls_lst
-
-
-
-
+            print(f'Изображения успешно загружены, перехожу на следующую страницу\n')
+            parser.params['page'] += 1
+        else:
+            print('')
+            parser.params['page'] = 1
+            parser.params['minPrice'] += price_step
+            parser.params['maxPrice'] += price_step
 
 
 if __name__ == '__main__':

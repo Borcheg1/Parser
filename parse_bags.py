@@ -1,4 +1,4 @@
-'''
+"""
 Каждые ~500 картинок менять диапазон цен
 цвет, тип, материал
 minPrice=4000&
@@ -12,8 +12,8 @@ start price 500, 20 iterations, finish 8500, !+= 400!
 Проверка на окончание страниц
 if 'Ничего не нашли' in str(soup.find('h1').text):
     print('END')
+"""
 
-'''
 
 import re
 from tqdm import tqdm
@@ -21,11 +21,8 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 
 
-
 class Parser:
     LINK = 'http://aliexpress.ru/category/202000224/luggage-bags.html'
-
-    folder_dir = input('Укажите путь до папки, куда будут сохраняться картинки:\n')
 
     params = {
         "minPrice": 500,
@@ -36,8 +33,6 @@ class Parser:
     def __init__(self):
         pass
 
-    # Выбираем категорию, может быть перевызвана сколько угодно раз
-
     def choose_category(self, link=LINK):
         """
         Парсим url'ы подкатегорий и сплитим из них названия.
@@ -45,7 +40,7 @@ class Parser:
         :param link: - url на любую категорию товаров -> str
         :return: url на выбранную подкатегорию -> str
         """
-        soup = self._init_driver(link)
+        soup = self.init_driver(link)
         category = {}
         for item in soup.findAll("a"):
             if 'category' in str(item.get("href")):
@@ -67,7 +62,9 @@ class Parser:
         """
         prm = self.params
         url = f"{url}?minPrice={prm['minPrice']}&maxPrice={prm['maxPrice']}&page={prm['page']}"
-        soup = self._init_driver(url)
+        soup = self.init_driver(url)
+        if 'Ничего не нашли' in str(soup.find('h1').text):
+            return "END"
         temp_set = set()
         for item in soup.findAll("a"):
             if "/item/" in str(item.get("href")):
@@ -87,8 +84,8 @@ class Parser:
             value: список url'ов на все цвета этого товара. -> dict
         """
         dict_sku_id = {}
-        for url in urls_item_id:
-            soup = self._init_driver(url)
+        for url in tqdm(urls_item_id):
+            soup = self.init_driver(url)
             data = soup.find("script", {"id": "__AER_DATA__"})
             ids = []
             lst = str(data).split('"skuId":"')[1::]
@@ -97,18 +94,6 @@ class Parser:
             dict_sku_id[url] = ids
         urls_dict = self._prepare_sku_id(dict_sku_id)
         return urls_dict
-
-    # def get_pictures_urls(self, urls_dict):
-    #     picture_urls_lst = []
-    #     for key, value in urls_dict.items():
-    #         # key - главная ссылка на товар
-    #         # value - список всех ссылок на цвета товара
-    #         for url in tqdm(value):
-    #             soup = self._init_driver(url)
-    #             data = soup.find("picture")
-    #             picture_url = str(data).split(' ')[2].split('=')[1].strip('"')
-    #             picture_urls_lst.append(picture_url)
-    #     return picture_urls_lst
 
     def next_page(self):
         self.params['page'] += 1
@@ -146,7 +131,7 @@ class Parser:
         return urls_dict
 
     @staticmethod
-    def _init_driver(url):
+    def init_driver(url):
         """
         Инициализируем driver, вытаскиваем из url'а данные,
         инициализируем BeautifulSoup
