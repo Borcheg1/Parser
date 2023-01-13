@@ -1,6 +1,7 @@
 import json
 import os.path
 from io import BytesIO
+from time import sleep
 import requests
 from PIL import Image
 from tqdm import tqdm
@@ -12,26 +13,24 @@ def main():
     parser = Parser()
     link = parser.LINK
     parent_folder = r"C:\Users\Dmitrii\Desktop\aliexpress"  # Путь до папки, куда будут сохраняться фото
+    product_colors_number = 5  # Максимальное количество цветов одного товара
     max_price = 8500  # Максимальный порог диапазона цен
     max_page = 10  # Количество страниц распарсенных до изменения диапазона цен
     price_step = 400  # Изменение диапазона цен на этот шаг
     picture_size = (480, 480)
     folder_counter = 0
 
-    try:
-        category_url = parser.choose_category(link)
-    except Exception as e:
-        print(e)
+    category_url = parser.choose_category(link)
     subcategory = int(input('Продолжить выбор категории? 0 - нет, 1 - да\n'))
+
     while subcategory:
-        try:
-            category_url = parser.choose_category(link)
-        except Exception as e:
-            print(e)
+
+        category_url = parser.choose_category(category_url)
         subcategory = int(input('Продолжить выбор категории? 0 - нет, 1 - да:\n'))
 
     while parser.params['maxPrice'] <= max_price:
         while parser.params['page'] <= max_page:
+
             print(
                 f'Ищу товары на странице №{parser.params["page"]}\n'
                 f'Параметры:\nМинимальная цена = {parser.params["minPrice"]}\n'
@@ -39,28 +38,24 @@ def main():
                 f'...\n'
             )
 
-            try:
-                urls_item_id = parser.get_item_id_from_page(category_url)
-            except Exception as e:
-                print(e)
+            urls_item_id = parser.get_item_id_from_page(category_url)
 
             if urls_item_id == "END":
+                print('На этой странице товары не найдены, перехожу на следующую')
                 break
 
-            print(f'Товаров найдено: {len(urls_item_id)}\n'
-                  f'Ищу есть ли эти товары в другом цвете\n')
-
-            try:
-                urls_dict = parser.get_sku_id(urls_item_id)
-            except Exception as e:
-                print(e)
+            print(f'\nТоваров найдено: {len(urls_item_id)}\n'
+                  f'Ищу есть ли эти товары в другом цвете')
+            sleep(1)
+            urls_dict = parser.get_sku_id(urls_item_id, product_colors_number)
 
             cnt = 0
             for value in urls_dict.values():
                 cnt += len(value)
 
-            print(f'\nТовары всех цветов в количестве {cnt} найдены.\n'
-                  f'Начинаю поиск изображений')
+            sleep(1)
+            print(f'\nТовары всех цветов в количестве {cnt} найдены\n')
+            sleep(1)
 
             for idx, tpl in enumerate(urls_dict.items()):
                 key, value = tpl
@@ -75,7 +70,9 @@ def main():
                     json.dump(json_data, file)
 
                 print(f'\nНачинаю загрузку изображений товара №{idx + 1}')
+                sleep(0.5)
                 for number, url in enumerate(tqdm(value)):
+                    duplicate = []
                     soup = parser.init_driver(url)
                     data = soup.find("picture")
                     if data:
@@ -85,7 +82,10 @@ def main():
                             image = Image.open(BytesIO(response.content))
                             size = picture_size
                             resize_image = image.resize(size)
-                            resize_image.save(f'{path}/{number}.jpg')
+                            try:
+                                resize_image.save(f'{path}/{number}.jpg')
+                            except OSError as e:
+                                continue
 
             folder_counter += idx
 

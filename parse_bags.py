@@ -56,13 +56,14 @@ class Parser:
         urls_item_id = list(temp_set)
         return urls_item_id
 
-    def get_sku_id(self, urls_item_id):
+    def get_sku_id(self, urls_item_id, product_colors_number):
         """
         Парсим параметр sku_id для каждого товара, склеиваем url товара с параметром sku_id и
         кладем список всех url'ов одного товара под один ключ.
         Параметр sku_id ведет на страницу с этим товаром другого цвета.
 
         :param urls_item_id: список url'ов на товары -> list
+        :param product_colors_number: максимальное для поиска количество товаров в другом цвете -> int
         :return: словарь, где
             key: url на товар;
             value: список url'ов на все цвета этого товара. -> dict
@@ -73,8 +74,9 @@ class Parser:
             data = soup.find("script", {"id": "__AER_DATA__"})
             ids = []
             lst = str(data).split('"skuId":"')[1::]
-            for item in lst:
-                ids.append(re.search(r"\d{4,25}", item).group(0))  # поиск sku_id (первое вхождение диапазона цифр 4-25)
+            for idx, item in enumerate(lst):
+                if idx < product_colors_number:
+                    ids.append(re.search(r"\d{4,25}", item).group(0))  # поиск sku_id (первое вхождение диапазона цифр 4-25)
             dict_sku_id[url] = ids
         urls_dict = self._prepare_sku_id(dict_sku_id)
         return urls_dict
@@ -124,8 +126,8 @@ class Parser:
         :return: объект класса BeautifulSoup, в котором находится html код страницы -> bs4.BeautifulSoup
         """
         options = FirefoxOptions()
-        options.add_argument("--width=300")
         options.add_argument("--height==300")
+        options.add_argument("--weight==300")
         driver = Firefox(options=options)
         driver.get(url)
         response = driver.page_source
