@@ -13,9 +13,6 @@ class Parser:
         "page": 1
     }
 
-    def __init__(self):
-        pass
-
     def choose_category(self, link=LINK):
         """
         Парсим url'ы подкатегорий и сплитим из них названия.
@@ -75,7 +72,7 @@ class Parser:
             ids = []
             lst = str(data).split('"skuId":"')[1::]
             for idx, item in enumerate(lst):
-                if idx < product_colors_number:
+                if idx < product_colors_number - 1:  # -1 потому что _prepare_sku_id добавляет
                     ids.append(re.search(r"\d{4,25}", item).group(0))  # поиск sku_id (первое вхождение диапазона цифр 4-25)
             dict_sku_id[url] = ids
         urls_dict = self._prepare_sku_id(dict_sku_id)
@@ -111,7 +108,10 @@ class Parser:
             urls_dict[main_url] = []
             urls_dict[main_url].append(key)
             for item in value:
-                url = f"{main_url}={item}"
+                if "?sku_id" in main_url:
+                    url = f"{main_url}={item}"
+                else:
+                    url = f"{main_url}?sku_id={item}"
                 if url not in urls_dict[main_url]:
                     urls_dict[main_url].append(url)
         return urls_dict

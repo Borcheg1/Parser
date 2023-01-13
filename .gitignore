@@ -7,3 +7,6 @@ __pycache__/
 
 # selenium.webdriver logs
 geckodriver.log
+
+# test files
+test.py

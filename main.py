@@ -12,7 +12,7 @@ from parse_bags import Parser
 def main():
     parser = Parser()
     link = parser.LINK
-    parent_folder = r"C:\Users\Dmitrii\Desktop\aliexpress"  # Путь до папки, куда будут сохраняться фото
+    parent_folder = r""  # Путь до папки, куда будут сохраняться фото
     product_colors_number = 5  # Максимальное количество цветов одного товара
     max_price = 8500  # Максимальный порог диапазона цен
     max_page = 10  # Количество страниц распарсенных до изменения диапазона цен
@@ -53,6 +53,10 @@ def main():
             for value in urls_dict.values():
                 cnt += len(value)
 
+            if not cnt:
+                print('\nУпс, на этой странице поиск не удался, похоже капча одолела...')
+                continue
+
             sleep(1)
             print(f'\nТовары всех цветов в количестве {cnt} найдены\n')
             sleep(1)
@@ -86,10 +90,10 @@ def main():
                                 resize_image = image.resize(size)
                                 try:
                                     resize_image.save(f'{path}/{number}.jpg')
-                                except OSError as e:
+                                except OSError:
                                     continue
-
-            folder_counter += idx
+            else:
+                folder_counter += idx
 
             print(f'Изображения успешно загружены, перехожу на следующую страницу\n')
             parser.params['page'] += 1
