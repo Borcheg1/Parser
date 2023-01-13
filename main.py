@@ -77,15 +77,17 @@ def main():
                     data = soup.find("picture")
                     if data:
                         picture_url = f'''http://{str(data).split(' ')[2].split('=')[1].strip('"').split('//')[1]}'''
-                        response = requests.get(picture_url)
-                        if 199 < response.status_code < 203:
-                            image = Image.open(BytesIO(response.content))
-                            size = picture_size
-                            resize_image = image.resize(size)
-                            try:
-                                resize_image.save(f'{path}/{number}.jpg')
-                            except OSError as e:
-                                continue
+                        if picture_url not in duplicate:
+                            duplicate.append(picture_url)
+                            response = requests.get(picture_url)
+                            if 199 < response.status_code < 203:
+                                image = Image.open(BytesIO(response.content))
+                                size = picture_size
+                                resize_image = image.resize(size)
+                                try:
+                                    resize_image.save(f'{path}/{number}.jpg')
+                                except OSError as e:
+                                    continue
 
             folder_counter += idx
 
