@@ -12,13 +12,17 @@ from parse_bags import Parser
 def main():
     parser = Parser()
     link = parser.LINK
-    parent_folder = r""  # Путь до папки, куда будут сохраняться фото
+    parent_folder = r"C:\Users\Dmitrii\Desktop\aliexpress"  # Путь до папки, куда будут сохраняться фото
     product_colors_number = 5  # Максимальное количество цветов одного товара
     max_price = 8500  # Максимальный порог диапазона цен
-    max_page = 10  # Количество страниц распарсенных до изменения диапазона цен
-    price_step = 400  # Изменение диапазона цен на этот шаг
+    max_page = 5  # Количество страниц распарсенных до изменения диапазона цен
+    price_step = 401  # Изменение диапазона цен на этот шаг
     picture_size = (480, 480)
     folder_counter = 0
+
+    if not parent_folder:
+        print('Укажите путь до папки в переменной "parent_folder"')
+        return
 
     category_url = parser.choose_category(link)
     subcategory = int(input('Продолжить выбор категории? 0 - нет, 1 - да\n'))

@@ -1,4 +1,6 @@
 import re
+from time import sleep
+
 from tqdm import tqdm
 from bs4 import BeautifulSoup
 from selenium.webdriver import Firefox, FirefoxOptions
@@ -12,6 +14,7 @@ class Parser:
         "maxPrice": 900,
         "page": 1
     }
+
 
     def choose_category(self, link=LINK):
         """
@@ -72,7 +75,7 @@ class Parser:
             ids = []
             lst = str(data).split('"skuId":"')[1::]
             for idx, item in enumerate(lst):
-                if idx < product_colors_number - 1:  # -1 потому что _prepare_sku_id добавляет
+                if idx < product_colors_number:  # -1 потому что _prepare_sku_id добавляет
                     ids.append(re.search(r"\d{4,25}", item).group(0))  # поиск sku_id (первое вхождение диапазона цифр 4-25)
             dict_sku_id[url] = ids
         urls_dict = self._prepare_sku_id(dict_sku_id)
@@ -106,7 +109,7 @@ class Parser:
         for key, value in dict_sku_ids.items():
             main_url = key.split("=")[0]
             urls_dict[main_url] = []
-            urls_dict[main_url].append(key)
+            # urls_dict[main_url].append(key)
             for item in value:
                 if "?sku_id" in main_url:
                     url = f"{main_url}={item}"
@@ -119,8 +122,8 @@ class Parser:
     @staticmethod
     def init_driver(url):
         """
-        Инициализируем driver, вытаскиваем из url'а данные,
-        инициализируем BeautifulSoup
+        Инициализируем driver; вытаскиваем из url'а данные;
+        инициализируем BeautifulSoup; если вылезает капча, ждем и пробуем снова этот-эе url
 
         :param url: url на страницу, из которой хотим достать данные -> str
         :return: объект класса BeautifulSoup, в котором находится html код страницы -> bs4.BeautifulSoup
@@ -133,4 +136,17 @@ class Parser:
         response = driver.page_source
         driver.close()
         soup = BeautifulSoup(response, 'html.parser')
+        while (
+                soup.find('div', {"class": "warning-text"}) is not None or
+                soup.find('div', {"class": "warnning-text"}) is not None
+        ):
+            options = FirefoxOptions()
+            options.add_argument("--height==300")
+            options.add_argument("--weight==300")
+            driver = Firefox(options=options)
+            driver.get(url)
+            response = driver.page_source
+            driver.close()
+            soup = BeautifulSoup(response, 'html.parser')
+            sleep(20)
         return soup
