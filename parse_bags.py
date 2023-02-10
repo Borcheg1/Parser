@@ -15,7 +15,6 @@ class Parser:
         "page": 1
     }
 
-
     def choose_category(self, link=LINK):
         """
         Парсим url'ы подкатегорий и сплитим из них названия.
@@ -123,7 +122,7 @@ class Parser:
     def init_driver(url):
         """
         Инициализируем driver; вытаскиваем из url'а данные;
-        инициализируем BeautifulSoup; если вылезает капча, ждем и пробуем снова этот-эе url
+        инициализируем BeautifulSoup; если вылезает капча, ждем и пробуем снова этот же url
 
         :param url: url на страницу, из которой хотим достать данные -> str
         :return: объект класса BeautifulSoup, в котором находится html код страницы -> bs4.BeautifulSoup
@@ -148,5 +147,5 @@ class Parser:
             response = driver.page_source
             driver.close()
             soup = BeautifulSoup(response, 'html.parser')
-            sleep(20)
+            sleep(300)
         return soup
